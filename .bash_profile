@@ -124,36 +124,6 @@ function start-container() {
 # quick launch specific container
 alias ubuntud="start-container ubuntud"
 
-function old-start-ubuntu() {
-    open -jg -a /Applications/Docker.app
-
-    echo -n "Waiting for Docker to start"
-    while [ "x$(pgrep Docker 2>/dev/null)" = "x" ]; do
-        echo -n "." && sleep 1
-    done
-    echo ""
-
-    local CNAME=ubuntud
-    if [ ! "$(docker ps | grep $CNAME)" ] && [ ! "$(docker start $CNAME)" ]; then
-        echo "Failed to start the docker container"
-        return 1
-    fi
-
-    local CID="$(docker ps --all --filter name=$CNAME --format='{{.ID}}' | head -n 1)"
-    if [ ! "$?" ] || [ "x$CID" = "x" ]; then
-        echo "docker ps failed"
-        return 1
-    fi
-
-    echo -n "Waiting for container to start"
-    until [ "$(docker inspect --format '{{json .State.Status}}' $CID)" == '"running"' ]; do
-        echo -n "." && sleep 1
-    done
-    echo ""
-
-    docker exec -it "$CNAME" bash
-}
-
 function mdl() {
     pandoc -t plain "$1" | less
 }
