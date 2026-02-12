@@ -1,7 +1,10 @@
 export PATH=/opt/homebrew/bin:/opt/homebrew/sbin:$PATH
 export PATH=/opt/homebrew/include:/opt/homebrew/Cellar:/opt/homebrew/lib:$PATH
-export PATH=/opt/homebrew/Cellar/libsixel/1.10.3_1:$PATH
+export PATH=/opt/homebrew/opt/llvm/bin:$PATH
 export HOMEBREW_NO_AUTO_UPDATE=1
+
+export GOROOT=/usr/local/go
+export PATH=$GOROOT/bin:$PATH
 
 if [[ -r "/opt/homebrew/etc/profile.d/bash_completion.sh" ]]; then
     . "/opt/homebrew/etc/profile.d/bash_completion.sh"
@@ -41,11 +44,53 @@ function mkdircd() {
     mkdir -p "$@" && cd "${@:-1}"
 }
 
-function bash-conf() {
+function confbash() {
     local conf="$(readlink -f ~/.bash_profile)"
 
-    nvim "$conf"
+    vim "$conf"
     source "$conf"
+}
+
+function confvim() {
+    vim "$(readlink -f ~)/.vimrc"
+}
+
+function conftmux() {
+    local conf=$(readlink -f ~/.config/tmux/tmux.conf) || {
+        error "Couldn't find tmux.conf file, aborting..."
+        return 1
+    }
+
+    vim "$conf"
+}
+
+function conflazy() {
+    local conf=$(readlink -d ~/.config/nvim/lua/) || {
+        error "Couldn't find lazynvim configuration, aborting..."
+        return 1
+    }
+
+    vim "$conf"
+}
+
+function gshow() {
+    local branch=$1
+    local path=$2
+    [[ -z "$branch" ]] && read -ep "Enter branch: " branch
+    [[ -z "$path" ]] && read -ep "Enter path: " path
+
+    tmpfile=$(mktemp)
+    output=$(git show "$branch:$path") || {
+        error "\tFailed:\n\`\`\`\n$output\n\`\`\`"
+        rm "$tmpfile"
+        return 1
+    }
+
+    echo "$output" > "$tmpfile"
+    vim "$tmpfile"
+    rm "$tmpfile"
+
+    return 0
 }
 
 function start-docker() {
